@@ -309,13 +309,15 @@
       overflow:auto;
       align-items:flex-start;
       justify-content:flex-start;
-      padding:12px;
+      padding:0;
       scrollbar-width:none;
+      overscroll-behavior:contain;
+      touch-action:pan-x pan-y;
     }
     .board-viewport::-webkit-scrollbar{ display:none; }
 
     .board-spacer{
-      margin:auto;
+      margin:0;
     }
 
     /* Keep the board large enough to read, while fitting its width when possible. */
@@ -328,6 +330,7 @@
       width:min(92vw, 560px);
       max-height:min(84dvh, 760px);
       padding:34px 22px 24px;
+      margin:0;
       border-radius:2px;
       overscroll-behavior:contain;
       -webkit-overflow-scrolling:touch;
@@ -346,7 +349,7 @@
   }
 
   @media (max-width: 430px){
-    .board-viewport{ padding:8px; }
+    .board-viewport{ padding:0; }
 
     .focus-note{
       width:calc(100vw - 20px);
@@ -758,15 +761,17 @@ function fitBoard(){
   const verticalPadding = isMobile ? 16 : 24;
 
   if(isMobile){
-    // On phones the board is scaled to the available width instead of being
-    // forced to 62%, which previously made it unnecessarily wide and caused
-    // awkward horizontal scrolling.
-    const scale = Math.min(1, Math.max(0.30, (vp.clientWidth-horizontalPadding)/1160));
+    // On phones, do NOT shrink the whole investigation board to the viewport width.
+    // A 1160px board reduced to ~30% makes the sticky notes unreadably small.
+    // Keep a readable scale and let the user pan the board naturally with one finger.
+    const scale = Math.min(0.68, Math.max(0.58, (vp.clientHeight-24)/980));
     board.style.transform = `scale(${scale})`;
     spacer.style.width = (1160*scale)+"px";
     spacer.style.height = (980*scale)+"px";
     spacer.style.minWidth = (1160*scale)+"px";
     spacer.style.minHeight = (980*scale)+"px";
+    spacer.style.marginLeft = "0";
+    spacer.style.marginRight = "0";
   }else{
     const fitScale = Math.min(1, (vp.clientWidth-24)/1160, (vp.clientHeight-24)/980);
     const scale = Math.max(fitScale, 0.62);
@@ -779,7 +784,18 @@ function fitBoard(){
 }
 
 window.addEventListener("resize", fitBoard, {passive:true});
-window.addEventListener("orientationchange", ()=>setTimeout(fitBoard, 120), {passive:true});
+window.addEventListener("orientationchange", ()=>setTimeout(fitBoard, 180), {passive:true});
+
+// Start a mobile visit around the middle of the board instead of showing its
+// empty left edge. The user can then pan freely in every direction.
+function centerBoardOnMobile(){
+  const vp = document.getElementById("viewport");
+  if(window.matchMedia("(max-width: 700px)").matches){
+    vp.scrollLeft = Math.max(0, (vp.scrollWidth - vp.clientWidth) / 2);
+    vp.scrollTop = Math.max(0, (vp.scrollHeight - vp.clientHeight) / 2);
+  }
+}
+window.addEventListener("load", ()=>setTimeout(centerBoardOnMobile, 80), {once:true});
 
 /* =========================================================================
    ИНИЦИАЛИЗАЦИЯ
