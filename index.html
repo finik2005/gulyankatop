@@ -108,6 +108,12 @@
   }
   svg.strings circle.knot.visible{ opacity:.9; }
 
+  /* Все соединения видны сразу после загрузки */
+  svg.strings .seg.thread{ opacity:.92; }
+  svg.strings .seg.shadow{ opacity:.35; }
+  svg.strings .seg.shine{ opacity:.5; }
+  svg.strings circle.knot{ opacity:.9; }
+
   /* ---------- decorative board clutter (non-interactive) ---------- */
   .prop{ position:absolute; pointer-events:none; opacity:.85; }
   .prop.loose-pin{ width:15px; height:15px; }
@@ -528,11 +534,12 @@ function render(){
     el.querySelector(".qmark").style.display = (!opened && avail) ? "block" : "none";
     if(opened) fitText(markEl, n);
   });
+  /* Все нити показываются сразу — независимо от состояния карточек. */
   document.querySelectorAll("svg.strings .seg").forEach(p=>{
-    const a = p.dataset.a, b = p.dataset.b;
-    const show = (state.available.has(a)||state.opened.has(a)) &&
-                 (state.available.has(b)||state.opened.has(b));
-    p.classList.toggle("visible", show);
+    p.classList.add("visible");
+  });
+  document.querySelectorAll("svg.strings circle.knot").forEach(p=>{
+    p.classList.add("visible");
   });
 }
 
